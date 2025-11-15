@@ -25,6 +25,22 @@ const run = async () => {
     const myDB = client.db("myDB");
     const productsCollection = myDB.collection("products");
 
+    app.get("/products", async (req, res) => {
+      const cursor = productsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    //fetching the single data from the server
+    app.get("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id),
+      };
+      const result = await productsCollection.findOne(query);
+      res.send(result);
+    });
+
     // posting the products
     app.post("/products", async (req, res) => {
       const newProducts = req.body;
