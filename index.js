@@ -18,23 +18,43 @@ const client = new MongoClient(uri, {
   },
 });
 
-// const run = async () => {
-//   try {
-//     await client.connect();
+const run = async () => {
+  try {
+    await client.connect();
+    //creating the Database
+    const myDB = client.db("myDB");
+    const productsCollection = myDB.collection("products");
 
-//     //sending ping for the successfull connection
-//     await client.db("admin").command({ ping: 1 });
-//     console.log("Successfully Connected to the MongoDB!");
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
-
-client
-  .connect()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`This Sever is listeing from port number : ${port}`);
+    // posting the products
+    app.post("/products", async (req, res) => {
+      const newProducts = req.body;
+      const result = await productsCollection.insertOne(newProducts);
+      res.send(result);
     });
-  })
-  .catch(console.dir);
+
+    //delete from the server
+    app.delete("/products", async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: id,
+      };
+      const result = await productsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //sending ping for the successfull connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Successfully Connected to the MongoDB!");
+  } catch (error) {
+    console.log(error);
+  }
+};
+run().catch(console.dir);
+
+app.get("/", (req, res) => {
+  res.send("The Sever is Running!");
+});
+
+app.listen(port, () => {
+  console.log(`This Sever is listeing from port number : ${port}`);
+});
