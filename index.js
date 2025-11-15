@@ -18,23 +18,23 @@ const client = new MongoClient(uri, {
   },
 });
 
-const run = async () => {
-  try {
-    await client.connect();
+// const run = async () => {
+//   try {
+//     await client.connect();
 
-    //sending ping for the successfull connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Successfully Connected to the MongoDB!");
-  } catch (error) {
-    console.log(error);
-  }
-};
-run().catch(console.dir);
+//     //sending ping for the successfull connection
+//     await client.db("admin").command({ ping: 1 });
+//     console.log("Successfully Connected to the MongoDB!");
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
 
-app.get("/", (req, res) => {
-  res.send("The Sever is Running!");
-});
-
-app.listen(port, () => {
-  console.log(`This Sever is listeing from port number : ${port}`);
-});
+client
+  .connect()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`This Sever is listeing from port number : ${port}`);
+    });
+  })
+  .catch(console.dir);
