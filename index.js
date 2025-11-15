@@ -26,7 +26,30 @@ const run = async () => {
     const productsCollection = myDB.collection("products");
 
     app.get("/products", async (req, res) => {
-      const cursor = productsCollection.find();
+      const sortBy = {
+        price_max: -1,
+      };
+      const cursor = productsCollection.find().sort(sortBy);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/productsSorted", async (req, res) => {
+      const fields = {
+        title: 1,
+        price_min: 1,
+        price_max: 1,
+      };
+      const sortBy = {
+        price_min: -1,
+      };
+      const query = {};
+      const cursor = productsCollection
+        .find(query)
+        .sort(sortBy)
+        .skip(2)
+        .limit(10)
+        .project(fields);
       const result = await cursor.toArray();
       res.send(result);
     });
