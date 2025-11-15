@@ -24,12 +24,35 @@ const run = async () => {
     //creating the Database
     const myDB = client.db("myDB");
     const productsCollection = myDB.collection("products");
+    const bidsCollection = myDB.collection("bids");
+
+    app.get("/bids", async (req, res) => {
+      const email = req.query.email;
+      const query = {};
+      if (email) {
+        query.buyer_email = email;
+      }
+      const cursor = bidsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.post("/bids", async (req, res) => {
+      const newBid = req.body;
+      const result = await bidsCollection.insertOne(newBid);
+      res.send(result);
+    });
 
     app.get("/products", async (req, res) => {
       const sortBy = {
-        price_max: -1,
+        price_max: 1,
       };
-      const cursor = productsCollection.find().sort(sortBy);
+      const email = req.query.email;
+      const query = {};
+      if (email) {
+        query.email = email;
+      }
+      const cursor = productsCollection.find(query).sort(sortBy);
       const result = await cursor.toArray();
       res.send(result);
     });
