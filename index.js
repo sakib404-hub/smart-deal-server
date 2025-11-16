@@ -51,10 +51,19 @@ const run = async () => {
       const email = req.query.email;
       const query = {};
       if (email) {
-        query.buyer_email = email;
+        query.email = email;
       }
       const cursor = bidsCollection.find(query);
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.delete("/bids/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id),
+      };
+      const result = await bidsCollection.deleteOne(query);
       res.send(result);
     });
 
@@ -65,7 +74,7 @@ const run = async () => {
         productId,
       };
       const sortBy = {
-        price: -1,
+        price: 1,
       };
       const cursor = bidsCollection.find(query).sort(sortBy);
       const result = await cursor.toArray();
