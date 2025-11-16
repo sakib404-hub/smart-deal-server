@@ -25,6 +25,27 @@ const run = async () => {
     const myDB = client.db("myDB");
     const productsCollection = myDB.collection("products");
     const bidsCollection = myDB.collection("bids");
+    const userCollection = myDB.collection("user");
+
+    app.get("/users", async (req, res) => {
+      const query = {};
+      const cursor = userCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.post("/users", async (req, res) => {
+      const email = req.body.email;
+      const query = {
+        email,
+      };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.status(409).send({ message: "User already exists" });
+      }
+      const result = await userCollection.insertOne(req.body);
+      res.status(201).send(result);
+    });
 
     app.get("/bids", async (req, res) => {
       const email = req.query.email;
