@@ -1,9 +1,15 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const admin = require("firebase-admin");
+const serviceAccount = require("./firebase_admin_key.json");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const port = process.env.PORT || 5025;
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 app.use(express.json());
 app.use(cors());
@@ -15,7 +21,7 @@ const logger = (req, res, next) => {
   next();
 };
 
-const varifyFirebaseToken = (req, res, next) => {
+const varifyFirebaseToken = async (req, res, next) => {
   //checking if we have got the headers
   if (!req.headers.authorization) {
     //status code 401 for unauthorized access
@@ -29,9 +35,32 @@ const varifyFirebaseToken = (req, res, next) => {
     return res.status(401).send({ message: "Unauthorized Access!" });
   }
   //? Means we have the token we need to just varify it
-  console.log(token);
-  next();
+  try {
+    const userInfo = await admin.auth().verifyIdToken(token);
+    console.log("after the token validation, ", userInfo);
+    next();
+  } catch {
+    return res.status(401).send({ message: "Unauthorized Access!" });
+  }
 };
+
+// const varifyToken = (req, res, next) => {
+//   if (!req.headers.authorization) {
+//     return res.status(401).send({ message: "UnAuthorized Access!" });
+//   }
+//   const token = req.headers.authorization.split(" ")[1];
+//   if (!token) {
+//     return res.status(401).send({ message: "UnAuthorized Access!" });
+//   }
+//   // verifying the token
+//   try{
+//     const userInformation = await admin.auth().verifyIdToken(token);
+//     next();
+//   }catch{
+//     return res.status(401).send({message : 'Unauthorized Access!'});
+//   }
+//   next();
+// };
 
 const uri = `mongodb+srv://${process.env.db_user}:${process.env.db_pass}@crud-operation.iftbw43.mongodb.net/?appName=CRUD-operation`;
 
@@ -74,7 +103,6 @@ const run = async () => {
 
     app.get("/bids", logger, varifyFirebaseToken, async (req, res) => {
       const email = req.query.email;
-      const token = req.headers.authorization;
       const query = {};
       if (email) {
         query.email = email;
