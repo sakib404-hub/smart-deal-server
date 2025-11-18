@@ -105,7 +105,10 @@ const run = async () => {
       const email = req.query.email;
       const query = {};
       if (email !== req.token_email) {
-        return res.status(403).send({ message: "Forbidden Access!" });
+        if (email !== req.token_email) {
+          return res.status(403).send({ message: "Forbidden Access!" });
+        }
+        query.email = email;
       }
       const cursor = bidsCollection.find(query);
       const result = await cursor.toArray();
