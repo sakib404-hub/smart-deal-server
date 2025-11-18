@@ -14,6 +14,15 @@ admin.initializeApp({
 app.use(express.json());
 app.use(cors());
 
+const uri = `mongodb+srv://${process.env.db_user}:${process.env.db_pass}@crud-operation.iftbw43.mongodb.net/?appName=CRUD-operation`;
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+});
+
 // concept of middleware
 
 const logger = (req, res, next) => {
@@ -38,6 +47,7 @@ const varifyFirebaseToken = async (req, res, next) => {
   try {
     const userInfo = await admin.auth().verifyIdToken(token);
     console.log("after the token validation, ", userInfo);
+    req.token_email = userInfo.email;
     next();
   } catch {
     return res.status(401).send({ message: "Unauthorized Access!" });
@@ -61,16 +71,6 @@ const varifyFirebaseToken = async (req, res, next) => {
 //   }
 //   next();
 // };
-
-const uri = `mongodb+srv://${process.env.db_user}:${process.env.db_pass}@crud-operation.iftbw43.mongodb.net/?appName=CRUD-operation`;
-
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
 
 const run = async () => {
   try {
@@ -104,8 +104,8 @@ const run = async () => {
     app.get("/bids", logger, varifyFirebaseToken, async (req, res) => {
       const email = req.query.email;
       const query = {};
-      if (email) {
-        query.email = email;
+      if (email !== req.token_email) {
+        return res.status(403).send({ message: "Forbidden Access!" });
       }
       const cursor = bidsCollection.find(query);
       const result = await cursor.toArray();
