@@ -8,6 +8,31 @@ const port = process.env.PORT || 5025;
 app.use(express.json());
 app.use(cors());
 
+// concept of middleware
+
+const logger = (req, res, next) => {
+  console.log("Logging Information, I am from MiddleWare!");
+  next();
+};
+
+const varifyFirebaseToken = (req, res, next) => {
+  //checking if we have got the headers
+  if (!req.headers.authorization) {
+    //status code 401 for unauthorized access
+    return res.status(401).send({ message: "Unauthorized Access!" });
+  }
+  //getting the token with spliting the bearer
+  const token = req.headers.authorization.split(" ")[1];
+
+  //checking if we have got the token or not
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorized Access!" });
+  }
+  //? Means we have the token we need to just varify it
+  console.log(token);
+  next();
+};
+
 const uri = `mongodb+srv://${process.env.db_user}:${process.env.db_pass}@crud-operation.iftbw43.mongodb.net/?appName=CRUD-operation`;
 
 const client = new MongoClient(uri, {
@@ -47,8 +72,9 @@ const run = async () => {
       res.status(201).send(result);
     });
 
-    app.get("/bids", async (req, res) => {
+    app.get("/bids", logger, varifyFirebaseToken, async (req, res) => {
       const email = req.query.email;
+      const token = req.headers.authorization;
       const query = {};
       if (email) {
         query.email = email;
