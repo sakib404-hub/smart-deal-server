@@ -46,7 +46,7 @@ const varifyFirebaseToken = async (req, res, next) => {
   //? Means we have the token we need to just varify it
   try {
     const userInfo = await admin.auth().verifyIdToken(token);
-    console.log("after the token validation, ", userInfo);
+    // console.log("after the token validation, ", userInfo);
     req.token_email = userInfo.email;
     next();
   } catch {
@@ -71,6 +71,24 @@ const varifyFirebaseToken = async (req, res, next) => {
 //   }
 //   next();
 // };
+
+const verifyAuthTokenByAxios = async (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res.status(401).send({ message: "Unauthorized Access!" });
+  }
+  const token = authorization.split(" ")[1];
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorized Access!" });
+  }
+  try {
+    const userInfo = await admin.auth().verifyIdToken(token);
+    req.token_email = userInfo.email;
+    next();
+  } catch {
+    return res.status(401).send({ message: "Unauthorized Access!" });
+  }
+};
 
 const run = async () => {
   try {
@@ -199,7 +217,7 @@ const run = async () => {
     });
 
     // posting the products
-    app.post("/products", async (req, res) => {
+    app.post("/products", verifyAuthTokenByAxios, async (req, res) => {
       const newProducts = req.body;
       const result = await productsCollection.insertOne(newProducts);
       res.send(result);
